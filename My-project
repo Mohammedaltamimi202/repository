@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الطلبيات ومتابعة الهدر</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #781f19, #5a1612, #781f19);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background-color: #fdf0f1;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #781f19, #5a1612);
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+            border-bottom: 5px solid #d4a5a2;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            padding: 40px 20px;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            text-align: center;
+            width: 350px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card.match-orders {
+            border-color: #781f19;
+        }
+        
+        .card.waste-track {
+            border-color: #5a1612;
+        }
+        
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: #781f19;
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #781f19;
+        }
+        
+        .card p {
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .panel {
+            padding: 30px;
+            display: none;
+            background: #fdf0f1;
+            border-top: 2px solid #e8d1d3;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #781f19;
+        }
+        
+        .panel-header h2 {
+            font-size: 1.8rem;
+            color: #781f19;
+        }
+        
+        .back-btn {
+            background: #781f19;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            background: #5a1612;
+        }
+        
+        .excel-upload-section {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 450px;
+            text-align: center;
+            border: 2px dashed #781f19;
+            transition: all 0.3s;
+        }
+        
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .upload-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #781f19;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #781f19;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #781f19;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .upload-btn:hover {
+            background: #5a1612;
+        }
+        
+        .file-name {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #555;
+            height: 20px;
+        }
+        
+        .orders-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            width: 350px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #781f19;
+        }
+        
+        .order-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #781f19;
+        }
+        
+        .order-details {
+            text-align: right;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .alert {
+            background: #ffebee;
+            color: #b71c1c;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #b71c1c;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(183, 28, 28, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(183, 28, 28, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(183, 28, 28, 0); }
+        }
+        
+        .alert i {
+            font-size: 1.8rem;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            color: #1b5e20;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #4caf50;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .diff-section {
+            margin-top: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            border: 2px solid #d4a5a2;
+        }
+        
+        .diff-section h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #781f19;
+            text-align: center;
+        }
+        
+        .diff-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .diff-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #5a1612;
+        }
+        
+        .diff-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #5a1612;
+        }
+        
+        .diff-item p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .waste-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .option-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+            border: 2px solid #5a1612;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-8px);
+        }
+        
+        .option-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #5a1612;
+        }
+        
+        .option-card i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #5a1612;
+        }
+        
+        /* واجهة إدخال بيانات الهدر */
+        .waste-form-panel {
+            padding: 30px;
+            display: none;
+            background: #fdf0f1;
+            border-top: 2px solid #e8d1d3;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .waste-form {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .waste-form h3 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #781f19;
+        }
+        
+        .photo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .photo-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .photo-btn {
+            background: #e8d1d3;
+            color: #781f19;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .photo-btn:hover {
+            background: #d4a5a2;
+        }
+        
+        .photo-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #781f19;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fce4ec;
+        }
+        
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #5a1612;
+        }
+        
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e8d1d3;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, 
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #781f19;
+            outline: none;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .submit-btn {
+            background: #781f19;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            background: #5a1612;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #781f19;
+            color: white;
+            font-size: 1rem;
+            border-top: 5px solid #d4a5a2;
+        }
+        
+        .export-section {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 2px dashed #781f19;
+        }
+        
+        .export-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px;
+        }
+        
+        .export-btn:hover {
+            background: #388E3C;
+        }
+        
+        .reset-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px;
+        }
+        
+        .reset-btn:hover {
+            background: #d32f2f;
+        }
+        
+        .data-summary {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .data-summary h3 {
+            text-align: center;
+            color: #781f19;
+            margin-bottom: 15px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e8d1d3;
+        }
+        
+        .branch-selector {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .branch-selector select {
+            padding: 10px 20px;
+            border: 2px solid #781f19;
+            border-radius: 30px;
+            font-size: 1rem;
+            background: white;
+            color: #781f19;
+            width: 300px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .branch-selector select option {
+            padding: 10px;
+            text-align: center;
+            background: #fdf0f1;
+            color: #781f19;
+        }
+        
+        .branch-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .branch-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #d4a5a2;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .branch-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            background: #fce4ec;
+        }
+        
+        .branch-item i {
+            font-size: 2.5rem;
+            color: #781f19;
+            margin-bottom: 10px;
+        }
+        
+        .branch-item h4 {
+            color: #781f19;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .card {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .upload-card {
+                width: 100%;
+            }
+            
+            .orders-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .branch-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> إدارة الطلبيات ومتابعة الهدر</h1>
+            <p>   نفوذ الغربية   </p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card match-orders" id="matchOrdersCard">
+                <div class="icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h2>مطابقة الطلبيات</h2>
+                <p>الضغط هنا لمطابقة الطلبيات المرسلة مع المستلمة والتحقق من وجود أي نقص</p>
+            </div>
+            
+            <div class="card waste-track" id="wasteTrackCard">
+                <div class="icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2>متابعة الهدر</h2>
+                <p>الضغط هنا لمتابعة الهدر وتصنيفه حسب النوع (هدر النقل، هدر الفرع)</p>
+            </div>
+        </div>
+        
+        <!-- مطابقة الطلبيات Panel -->
+        <div class="panel" id="matchOrdersPanel">
+            <div class="panel-header">
+          </h2>  مطابقة الطلبيات </h2>
+                <button class="back-btn" id="backFromOrders">
+                    <i class="fas fa-arrow-left"></i> العودة للرئيسية
+                </button>
+            </div>
+            
+            <div class="excel-upload-section">
+                <div class="upload-card">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3>تحميل الطلبية المرسلة (جميع الفروع)</h3>
+                    <p>يرجى تحميل ملف إكسل يحتوي على تفاصيل الطلبيات المرسلة لجميع الفروع</p>
+                    <button class="upload-btn" id="sentUploadBtn">
+                        <i class="fas fa-upload"></i> اختر ملف إكسل
+                    </button>
+                    <input type="file" id="sentFileInput" class="file-input" accept=".xlsx, .xls">
+                    <div class="file-name" id="sentFileName"></div>
+                </div>
+                
+                <div class="upload-card">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3>تحميل الطلبية المستلمة (فرع واحد)</h3>
+                    <p>يرجى تحميل ملف إكسل يحتوي على تفاصيل الطلبية المستلمة لفرع واحد</p>
+                    <button class="upload-btn" id="receivedUploadBtn">
+                        <i class="fas fa-upload"></i> اختر ملف إكسل
+                    </button>
+                    <input type="file" id="receivedFileInput" class="file-input" accept=".xlsx, .xls">
+                    <div class="file-name" id="receivedFileName"></div>
+                </div>
+            </div>
+            
+            <div class="branch-selector">
+                <h3>اختر الفرع للمطابقة</h3>
+                <select id="branchSelector">
+                    <option value="">اختر فرع من القائمة</option>
+                </select>
+            </div>
+            
+            <div class="branch-list" id="branchList">
+                <!-- سيتم ملء هذا القسم بالفروع تلقائياً -->
+            </div>
+            
+            <div class="orders-container">
+                <div class="order-card">
+                    <h3>تفاصيل الطلبية المرسلة (جميع الفروع)</h3>
+                    <div class="order-details" id="sentDetails">
+                        <p style="color: #888; padding: 20px;">لم يتم تحميل أي بيانات بعد</p>
+                    </div>
+                </div>
+                
+                <div class="order-card">
+                    <h3>تفاصيل الطلبية المستلمة (فرع محدد)</h3>
+                    <div class="order-details" id="receivedDetails">
+                        <p style="color: #888; padding: 20px;">لم يتم تحميل أي بيانات بعد</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="diffAlert" class="alert" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <h3>تحذير: يوجد فارق بين الطلبيتين!</h3>
+                    <p id="diffMessage">تم اكتشاف فارق بين الطلبية المرسلة والمستلمة</p>
+                </div>
+            </div>
+            
+            <div id="successAlert" class="success" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <h3>نجاح: الطلبية مطابقة!</h3>
+                    <p id="successMessage">تمت مطابقة الطلبية بنجاح بدون أي نقص</p>
+                </div>
+            </div>
+            
+            <div class="diff-section" id="diffSection" style="display: none;">
+                <h3>نتائج المقارنة</h3>
+                <div class="diff-details" id="diffDetails">
+                    <!-- سيتم ملء هذا القسم تلقائياً بعد المقارنة -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- متابعة الهدر Panel -->
+        <div class="panel" id="wasteTrackPanel">
+            <div class="panel-header">
+                <h2>متابعة الهدر</h2>
+                <button class="back-btn" id="backFromWaste">
+                    <i class="fas fa-arrow-left"></i> العودة للرئيسية
+                </button>
+            </div>
+            
+            <div class="waste-options">
+                <div class="option-card" id="transportWaste">
+                    <i class="fas fa-truck"></i>
+                    <h3>هدر النقل</h3>
+                    <p>تتبع وتصنيف الهدر الناتج عن عمليات النقل والتوزيع</p>
+                </div>
+                
+                <div class="option-card" id="branchWaste">
+                    <i class="fas fa-store"></i>
+                    <h3>هدر الفرع</h3>
+                    <p>تتبع وتصنيف الهدر الناتج داخل الفروع </p>
+                </div>
+            </div>
+            
+            <div class="export-section">
+                <button class="export-btn" id="exportWasteData">
+                    <i class="fas fa-file-excel"></i> تصدير بيانات الهدر
+                </button>
+                <button class="reset-btn" id="resetWasteData">
+                    <i class="fas fa-trash"></i> مسح جميع البيانات
+                </button>
+            </div>
+            
+            <div class="data-summary">
+                <h3>ملخص البيانات المخزنة</h3>
+                <div id="wasteSummary">
+                    <p style="text-align: center; color: #888;">لا توجد بيانات مخزنة بعد</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- واجهة إدخال بيانات هدر النقل -->
+        <div class="waste-form-panel" id="transportWastePanel">
+            <div class="waste-form">
+                <div class="panel-header">
+                    <h2>تسجيل هدر النقل</h2>
+                    <button class="back-btn" id="backFromTransport">
+                        <i class="fas fa-arrow-left"></i> العودة
+                    </button>
+                </div>
+                
+                <h3>إضافة بيانات هدر النقل</h3>
+                
+                <div class="photo-section">
+                    <div class="photo-preview" id="transportPhotoPreview">
+                        <i class="fas fa-camera" style="font-size: 3rem; color: #781f19;"></i>
+                        <img id="transportPreviewImg" src="" alt="Preview">
+                    </div>
+                    
+                    <div class="photo-options">
+                        <button class="photo-btn" id="captureTransport">
+                            <i class="fas fa-camera"></i> التقاط صورة
+                        </button>
+                        <button class="photo-btn" id="uploadTransport">
+                            <i class="fas fa-upload"></i> إضافة من المعرض
+                        </button>
+                        <input type="file" id="transportFileInput" class="file-input" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="transportBranch">الفرع</label>
+                            <select id="transportBranch">
+                                <option value="">اختر فرع</option>
+                                <!-- سيتم ملء الفروع تلقائياً -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="transportDate">التاريخ</label>
+                            <input type="date" id="transportDate">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="transportQuantity">كمية الهدر</label>
+                            <input type="number" id="transportQuantity" placeholder="الكمية بالوحدات">
+                        </div>
+                    </div>
+                    
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="transportProduct">الصنف</label>
+                            <select id="transportProduct">
+                                <option value="">اختر صنف</option>
+                                <option value="منتج 1">منتج 1</option>
+                                <option value="منتج 2">منتج 2</option>
+                                <option value="منتج 3">منتج 3</option>
+                                <option value="منتج 4">منتج 4</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transportNotes">ملاحظات إضافية</label>
+                    <textarea id="transportNotes" rows="3" placeholder="أي ملاحظات إضافية عن هدر النقل"></textarea>
+                </div>
+                
+                <button class="submit-btn" id="submitTransport">
+                    <i class="fas fa-save"></i> حفظ بيانات هدر النقل
+                </button>
+            </div>
+        </div>
+        
+        <!-- واجهة إدخال بيانات هدر الفرع -->
+        <div class="waste-form-panel" id="branchWastePanel">
+            <div class="waste-form">
+                <div class="panel-header">
+                    <h2>تسجيل هدر الفرع</h2>
+                    <button class="back-btn" id="backFromBranch">
+                        <i class="fas fa-arrow-left"></i> العودة
+                    </button>
+                </div>
+                
+                <h3>إضافة بيانات هدر الفرع</h3>
+                
+                <div class="photo-section">
+                    <div class="photo-preview" id="branchPhotoPreview">
+                        <i class="fas fa-camera" style="font-size: 3rem; color: #781f19;"></i>
+                        <img id="branchPreviewImg" src="" alt="Preview">
+                    </div>
+                    
+                    <div class="photo-options">
+                        <button class="photo-btn" id="captureBranch">
+                            <i class="fas fa-camera"></i> التقاط صورة
+                        </button>
+                        <button class="photo-btn" id="uploadBranch">
+                            <i class="fas fa-upload"></i> إضافة من المعرض
+                        </button>
+                        <input type="file" id="branchFileInput" class="file-input" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="branchBranch">الفرع</label>
+                            <select id="branchBranch">
+                                <option value="">اختر فرع</option>
+                                <!-- سيتم ملء الفروع تلقائياً -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="branchDate">التاريخ</label>
+                            <input type="date" id="branchDate">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="branchQuantity">كمية الهدر</label>
+                            <input type="number" id="branchQuantity" placeholder="الكمية بالوحدات">
+                        </div>
+                    </div>
+                    
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="branchProduct">الصنف</label>
+                            <select id="branchProduct">
+                                <option value="">اختر صنف</option>
+                                <option value="منتج 1">منتج 1</option>
+                                <option value="منتج 2">منتج 2</option>
+                                <option value="منتج 3">منتج 3</option>
+                                <option value="منتج 4">منتج 4</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="branchNotes">ملاحظات إضافية</label>
+                    <textarea id="branchNotes" rows="3" placeholder="أي ملاحظات إضافية عن هدر الفرع"></textarea>
+                </div>
+                
+                <button class="submit-btn" id="submitBranch">
+                    <i class="fas fa-save"></i> حفظ بيانات هدر الفرع
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>نظام إدارة الطلبيات ومتابعة الهدر &copy; 2025 -Altam company</p>
+        </div>
+    </div>
+
+    <script>
+        // عناصر DOM
+        const matchOrdersCard = document.getElementById('matchOrdersCard');
+        const wasteTrackCard = document.getElementById('wasteTrackCard');
+        const matchOrdersPanel = document.getElementById('matchOrdersPanel');
+        const wasteTrackPanel = document.getElementById('wasteTrackPanel');
+        const backFromOrders = document.getElementById('backFromOrders');
+        const backFromWaste = document.getElementById('backFromWaste');
+        const transportWaste = document.getElementById('transportWaste');
+        const branchWaste = document.getElementById('branchWaste');
+        const sentUploadBtn = document.getElementById('sentUploadBtn');
+        const receivedUploadBtn = document.getElementById('receivedUploadBtn');
+        const sentFileInput = document.getElementById('sentFileInput');
+        const receivedFileInput = document.getElementById('receivedFileInput');
+        const sentFileName = document.getElementById('sentFileName');
+        const receivedFileName = document.getElementById('receivedFileName');
+        const sentDetails = document.getElementById('sentDetails');
+        const receivedDetails = document.getElementById('receivedDetails');
+        const diffAlert = document.getElementById('diffAlert');
+        const successAlert = document.getElementById('successAlert');
+        const diffSection = document.getElementById('diffSection');
+        const diffDetails = document.getElementById('diffDetails');
+        const diffMessage = document.getElementById('diffMessage');
+        const branchSelector = document.getElementById('branchSelector');
+        const branchList = document.getElementById('branchList');
+        
+        // واجهات الهدر
+        const transportWastePanel = document.getElementById('transportWastePanel');
+        const branchWastePanel = document.getElementById('branchWastePanel');
+        const backFromTransport = document.getElementById('backFromTransport');
+        const backFromBranch = document.getElementById('backFromBranch');
+        const captureTransport = document.getElementById('captureTransport');
+        const uploadTransport = document.getElementById('uploadTransport');
+        const transportFileInput = document.getElementById('transportFileInput');
+        const transportPreviewImg = document.getElementById('transportPreviewImg');
+        const captureBranch = document.getElementById('captureBranch');
+        const uploadBranch = document.getElementById('uploadBranch');
+        const branchFileInput = document.getElementById('branchFileInput');
+        const branchPreviewImg = document.getElementById('branchPreviewImg');
+        const submitTransport = document.getElementById('submitTransport');
+        const submitBranch = document.getElementById('submitBranch');
+        
+        // تصدير البيانات
+        const exportWasteData = document.getElementById('exportWasteData');
+        const resetWasteData = document.getElementById('resetWasteData');
+        const wasteSummary = document.getElementById('wasteSummary');
+        
+        // بيانات الطلبيات
+        let sentOrderData = null; // بيانات جميع الفروع
+        let receivedOrderData = null; // بيانات فرع واحد
+        
+        // تخزين بيانات الهدر
+        let wasteData = {
+            transport: [],
+            branch: []
+        };
+        
+        // قائمة الفروع الثابتة
+        const predefinedBranches = [
+            "النعيم",
+            "الحمدانية",
+            "السامر",
+            "النسيم",
+            "أبحر",
+            "الصفاء",
+            "السنابل",
+            "الجال",
+            "الشوقية"
+        ];
+        
+        // تحميل البيانات من localStorage عند بدء التشغيل
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedData = localStorage.getItem('wasteData');
+            if (savedData) {
+                wasteData = JSON.parse(savedData);
+                updateWasteSummary();
+            }
+            
+            // تهيئة قوائم الفروع
+            populateBranchList();
+            populateBranchSelectors();
+        });
+        
+        // تعبئة قائمة الفروع
+        function populateBranchList() {
+            branchList.innerHTML = '';
+            
+            predefinedBranches.forEach(branch => {
+                const branchItem = document.createElement('div');
+                branchItem.className = 'branch-item';
+                branchItem.innerHTML = `
+                    <i class="fas fa-store"></i>
+                    <h4>${branch}</h4>
+                `;
+                
+                branchItem.addEventListener('click', () => {
+                    branchSelector.value = branch;
+                    if (sentOrderData && receivedOrderData) {
+                        compareOrders();
+                    }
+                });
+                
+                branchList.appendChild(branchItem);
+            });
+        }
+        
+        // تعبئة قوائم الاختيار بالفروع
+        function populateBranchSelectors() {
+            // قائمة اختيار الفرع في واجهة المطابقة
+            branchSelector.innerHTML = '<option value="">اختر فرع من القائمة</option>';
+            predefinedBranches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch;
+                option.textContent = branch;
+                branchSelector.appendChild(option);
+            });
+            
+            // قوائم اختيار الفرع في واجهات الهدر
+            const transportBranch = document.getElementById('transportBranch');
+            const branchBranch = document.getElementById('branchBranch');
+            
+            transportBranch.innerHTML = '<option value="">اختر فرع</option>';
+            branchBranch.innerHTML = '<option value="">اختر فرع</option>';
+            
+            predefinedBranches.forEach(branch => {
+                const option1 = document.createElement('option');
+                option1.value = branch;
+                option1.textContent = branch;
+                transportBranch.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = branch;
+                option2.textContent = branch;
+                branchBranch.appendChild(option2);
+            });
+        }
+        
+        // أحداث النقر
+        matchOrdersCard.addEventListener('click', () => {
+            document.querySelector('.dashboard').style.display = 'none';
+            matchOrdersPanel.style.display = 'block';
+        });
+        
+        wasteTrackCard.addEventListener('click', () => {
+            document.querySelector('.dashboard').style.display = 'none';
+            wasteTrackPanel.style.display = 'block';
+            updateWasteSummary();
+        });
+        
+        backFromOrders.addEventListener('click', () => {
+            matchOrdersPanel.style.display = 'none';
+            document.querySelector('.dashboard').style.display = 'flex';
+        });
+        
+        backFromWaste.addEventListener('click', () => {
+            wasteTrackPanel.style.display = 'none';
+            document.querySelector('.dashboard').style.display = 'flex';
+        });
+        
+        transportWaste.addEventListener('click', () => {
+            wasteTrackPanel.style.display = 'none';
+            transportWastePanel.style.display = 'block';
+            // تعيين التاريخ الحالي كقيمة افتراضية
+            document.getElementById('transportDate').valueAsDate = new Date();
+        });
+        
+        branchWaste.addEventListener('click', () => {
+            wasteTrackPanel.style.display = 'none';
+            branchWastePanel.style.display = 'block';
+            // تعيين التاريخ الحالي كقيمة افتراضية
+            document.getElementById('branchDate').valueAsDate = new Date();
+        });
+        
+        backFromTransport.addEventListener('click', () => {
+            transportWastePanel.style.display = 'none';
+            wasteTrackPanel.style.display = 'block';
+        });
+        
+        backFromBranch.addEventListener('click', () => {
+            branchWastePanel.style.display = 'none';
+            wasteTrackPanel.style.display = 'block';
+        });
+        
+        // أحداث إضافة الصور
+        uploadTransport.addEventListener('click', () => {
+            transportFileInput.click();
+        });
+        
+        transportFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    transportPreviewImg.src = event.target.result;
+                    transportPreviewImg.style.display = 'block';
+                    document.querySelector('#transportPhotoPreview i').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        uploadBranch.addEventListener('click', () => {
+            branchFileInput.click();
+        });
+        
+        branchFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    branchPreviewImg.src = event.target.result;
+                    branchPreviewImg.style.display = 'block';
+                    document.querySelector('#branchPhotoPreview i').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // محاكاة التقاط الصورة (لأغراض العرض)
+        captureTransport.addEventListener('click', function() {
+            alert('في بيئة الإنتاج الحقيقية، سيتم فتح كاميرا الجهاز للتقاط صورة');
+        });
+        
+        captureBranch.addEventListener('click', function() {
+            alert('في بيئة الإنتاج الحقيقية، سيتم فتح كاميرا الجهاز للتقاط صورة');
+        });
+        
+        // أحداث حفظ بيانات الهدر
+        submitTransport.addEventListener('click', function() {
+            const branch = document.getElementById('transportBranch').value;
+            const date = document.getElementById('transportDate').value;
+            const quantity = document.getElementById('transportQuantity').value;
+            const product = document.getElementById('transportProduct').value;
+            const notes = document.getElementById('transportNotes').value;
+            
+            if (!branch || !date || !quantity || !product) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            // حفظ بيانات هدر النقل
+            const wasteItem = {
+                type: 'نقل',
+                branch: branch,
+                date: date,
+                quantity: quantity,
+                product: product,
+                notes: notes,
+                timestamp: new Date().toISOString()
+            };
+            
+            wasteData.transport.push(wasteItem);
+            saveWasteData();
+            
+            alert(`تم حفظ بيانات هدر النقل بنجاح!\nالفرع: ${branch}\nالتاريخ: ${date}\nكمية الهدر: ${quantity}\nالصنف: ${product}`);
+            
+            // مسح الحقول بعد الحفظ
+            document.getElementById('transportBranch').value = '';
+            document.getElementById('transportQuantity').value = '';
+            document.getElementById('transportProduct').selectedIndex = 0;
+            document.getElementById('transportNotes').value = '';
+            
+            // إعادة تعيين الصورة
+            transportPreviewImg.style.display = 'none';
+            document.querySelector('#transportPhotoPreview i').style.display = 'block';
+        });
+        
+        submitBranch.addEventListener('click', function() {
+            const branch = document.getElementById('branchBranch').value;
+            const date = document.getElementById('branchDate').value;
+            const quantity = document.getElementById('branchQuantity').value;
+            const product = document.getElementById('branchProduct').value;
+            const notes = document.getElementById('branchNotes').value;
+            
+            if (!branch || !date || !quantity || !product) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            // حفظ بيانات هدر الفرع
+            const wasteItem = {
+                type: 'فرع',
+                branch: branch,
+                date: date,
+                quantity: quantity,
+                product: product,
+                notes: notes,
+                timestamp: new Date().toISOString()
+            };
+            
+            wasteData.branch.push(wasteItem);
+            saveWasteData();
+            
+            alert(`تم حفظ بيانات هدر الفرع بنجاح!\nالفرع: ${branch}\nالتاريخ: ${date}\nكمية الهدر: ${quantity}\nالصنف: ${product}`);
+            
+            // مسح الحقول بعد الحفظ
+            document.getElementById('branchBranch').value = '';
+            document.getElementById('branchQuantity').value = '';
+            document.getElementById('branchProduct').selectedIndex = 0;
+            document.getElementById('branchNotes').value = '';
+            
+            // إعادة تعيين الصورة
+            branchPreviewImg.style.display = 'none';
+            document.querySelector('#branchPhotoPreview i').style.display = 'block';
+        });
+        
+        // تصدير بيانات الهدر
+        exportWasteData.addEventListener('click', function() {
+            if (wasteData.transport.length === 0 && wasteData.branch.length === 0) {
+                alert('لا توجد بيانات هدر لتصديرها');
+                return;
+            }
+            
+            // إنشاء مصفوفة لجميع بيانات الهدر
+            let allWasteData = [];
+            
+            // إضافة بيانات هدر النقل
+            wasteData.transport.forEach(item => {
+                allWasteData.push({
+                    'النوع': 'هدر النقل',
+                    'الفرع': item.branch,
+                    'التاريخ': item.date,
+                    'الصنف': item.product,
+                    'الكمية': item.quantity,
+                    'ملاحظات': item.notes,
+                    'وقت التسجيل': new Date(item.timestamp).toLocaleString()
+                });
+            });
+            
+            // إضافة بيانات هدر الفرع
+            wasteData.branch.forEach(item => {
+                allWasteData.push({
+                    'النوع': 'هدر الفرع',
+                    'الفرع': item.branch,
+                    'التاريخ': item.date,
+                    'الصنف': item.product,
+                    'الكمية': item.quantity,
+                    'ملاحظات': item.notes,
+                    'وقت التسجيل': new Date(item.timestamp).toLocaleString()
+                });
+            });
+            
+            // إنشاء مصنف Excel
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(allWasteData);
+            
+            // إضافة ورقة العمل إلى المصنف
+            XLSX.utils.book_append_sheet(wb, ws, 'بيانات الهدر');
+            
+            // تصدير الملف
+            const fileName = `نظام_الهدر_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            alert(`تم تصدير ملف ${fileName} بنجاح`);
+        });
+        
+        // مسح بيانات الهدر
+        resetWasteData.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من رغبتك في مسح جميع بيانات الهدر؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                wasteData = {
+                    transport: [],
+                    branch: []
+                };
+                saveWasteData();
+                updateWasteSummary();
+                alert('تم مسح جميع بيانات الهدر بنجاح');
+            }
+        });
+        
+        // حفظ البيانات في localStorage
+        function saveWasteData() {
+            localStorage.setItem('wasteData', JSON.stringify(wasteData));
+            updateWasteSummary();
+        }
+        
+        // تحديث ملخص بيانات الهدر
+        function updateWasteSummary() {
+            if (wasteData.transport.length === 0 && wasteData.branch.length === 0) {
+                wasteSummary.innerHTML = '<p style="text-align: center; color: #888;">لا توجد بيانات مخزنة بعد</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            // حساب إجمالي هدر النقل
+            const transportTotal = wasteData.transport.reduce((sum, item) => sum + parseInt(item.quantity || 0), 0);
+            html += `<div class="summary-item">
+                        <span>عدد سجلات هدر النقل:</span>
+                        <span>${wasteData.transport.length}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>إجمالي هدر النقل:</span>
+                        <span>${transportTotal} وحدة</span>
+                    </div>`;
+            
+            // حساب إجمالي هدر الفرع
+            const branchTotal = wasteData.branch.reduce((sum, item) => sum + parseInt(item.quantity || 0), 0);
+            html += `<div class="summary-item">
+                        <span>عدد سجلات هدر الفرع:</span>
+                        <span>${wasteData.branch.length}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>إجمالي هدر الفرع:</span>
+                        <span>${branchTotal} وحدة</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>إجمالي الهدر الكلي:</span>
+                        <span>${transportTotal + branchTotal} وحدة</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>تاريخ أحدث تسجيل:</span>
+                        <span>${getLatestRecordDate()}</span>
+                    </div>`;
+            
+            wasteSummary.innerHTML = html;
+        }
+        
+        // الحصول على تاريخ أحدث تسجيل
+        function getLatestRecordDate() {
+            let latestDate = '';
+            
+            // البحث في هدر النقل
+            wasteData.transport.forEach(item => {
+                if (!latestDate || item.timestamp > latestDate) {
+                    latestDate = item.timestamp;
+                }
+            });
+            
+            // البحث في هدر الفرع
+            wasteData.branch.forEach(item => {
+                if (!latestDate || item.timestamp > latestDate) {
+                    latestDate = item.timestamp;
+                }
+            });
+            
+            return latestDate ? new Date(latestDate).toLocaleString() : 'لا يوجد سجلات';
+        }
+        
+        // معالجة ملفات إكسل لمطابقة الطلبيات
+        sentUploadBtn.addEventListener('click', () => {
+            sentFileInput.click();
+        });
+        
+        receivedUploadBtn.addEventListener('click', () => {
+            receivedFileInput.click();
+        });
+        
+        sentFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                sentFileName.textContent = file.name;
+                readExcelFile(file, 'sent');
+            }
+        });
+        
+        receivedFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                receivedFileName.textContent = file.name;
+                readExcelFile(file, 'received');
+            }
+        });
+        
+        function readExcelFile(file, type) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                // الحصول على الورقة الأولى
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // تحويل إلى JSON
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                
+                if (type === 'sent') {
+                    sentOrderData = jsonData;
+                    displayOrderDetails(sentDetails, sentOrderData, 'جميع الفروع');
+                } else {
+                    receivedOrderData = jsonData;
+                    displayOrderDetails(receivedDetails, receivedOrderData, 'فرع واحد');
+                    
+                    // إذا كان ملف الطلبية المرسلة قد تم تحميله، قم بالمطابقة
+                    if (sentOrderData && branchSelector.value) {
+                        compareOrders();
+                    }
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function displayOrderDetails(container, data, type) {
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="color: #888; padding: 20px;">لا توجد بيانات لعرضها</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            // عرض التفاصيل الأساسية للطلبية
+            html += `<div class="detail">
+                        <span>عدد العناصر:</span>
+                        <span>${data.length}</span>
+                    </div>`;
+            
+            // عرض أول 5 عناصر كمثال
+            const sampleSize = Math.min(5, data.length);
+            for (let i = 0; i < sampleSize; i++) {
+                const item = data[i];
+                html += `<div class="detail">
+                            <span>${item['اسم المنتج'] || 'عنصر ' + (i+1)}:</span>
+                            <span>${item['الكمية'] || 'غير محدد'} وحدة</span>
+                        </div>`;
+            }
+            
+            if (data.length > 5) {
+                html += `<div class="detail">
+                            <span>و ${data.length - 5} عناصر أخرى...</span>
+                        </div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function compareOrders() {
+            if (!sentOrderData || !receivedOrderData || !branchSelector.value) return;
+            
+            // مسح نتائج المقارنة السابقة
+            diffDetails.innerHTML = '';
+            diffAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            diffSection.style.display = 'none';
+            
+            const selectedBranch = branchSelector.value;
+            
+            // المقارنة البسيطة
+            const sentTotal = sentOrderData.reduce((sum, item) => sum + (parseInt(item['الكمية']) || 0), 0);
+            const receivedTotal = receivedOrderData.reduce((sum, item) => sum + (parseInt(item['الكمية']) || 0), 0);
+            
+            const diff = sentTotal - receivedTotal;
+            
+            if (diff > 0) {
+                diffAlert.style.display = 'flex';
+                diffSection.style.display = 'block';
+                diffMessage.textContent = `تم اكتشاف نقص بمقدار ${diff} وحدة بين الطلبية المرسلة (${sentTotal} وحدة) والمستلمة (${receivedTotal} وحدة).`;
+                
+                // إضافة تفاصيل المقارنة
+                diffDetails.innerHTML = `
+                    <div class="diff-item">
+                        <h4>الفرع المحدد</h4>
+                        <p>${selectedBranch}</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الكمية الإجمالية المرسلة</h4>
+                        <p>${sentTotal} وحدة</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الكمية الإجمالية المستلمة</h4>
+                        <p>${receivedTotal} وحدة</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الفرق الكلي</h4>
+                        <p>${diff} وحدة (نقص)</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>نسبة النقص</h4>
+                        <p>${((diff / sentTotal) * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+                
+                // إرسال إشعارات
+                sendNotifications(selectedBranch, sentTotal, receivedTotal, diff);
+            } else if (diff < 0) {
+                diffAlert.style.display = 'flex';
+                diffSection.style.display = 'block';
+                diffMessage.textContent = `تم اكتشاف زيادة بمقدار ${-diff} وحدة بين الطلبية المرسلة (${sentTotal} وحدة) والمستلمة (${receivedTotal} وحدة).`;
+                
+                // إضافة تفاصيل المقارنة
+                diffDetails.innerHTML = `
+                    <div class="diff-item">
+                        <h4>الفرع المحدد</h4>
+                        <p>${selectedBranch}</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الكمية الإجمالية المرسلة</h4>
+                        <p>${sentTotal} وحدة</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الكمية الإجمالية المستلمة</h4>
+                        <p>${receivedTotal} وحدة</p>
+                    </div>
+                    <div class="diff-item">
+                        <h4>الفرق الكلي</h4>
+                        <p>${-diff} وحدة (زيادة)</p>
+                    </div>
+                `;
+            } else {
+                successAlert.style.display = 'flex';
+                document.getElementById('successMessage').innerHTML = `
+                    تمت مطابقة طلبية فرع <strong>${selectedBranch}</strong> بنجاح بدون أي نقص
+                `;
+            }
+        }
+        
+        // إرسال إشعارات عبر البريد الإلكتروني والواتساب
+        function sendNotifications(branch, sent, received, diff) {
+            const subject = `تحذير: نقص في طلبية فرع ${branch}`;
+            const emailBody = `
+                تم اكتشاف نقص في طلبية فرع ${branch}
+                الكمية المرسلة: ${sent} وحدة
+                الكمية المستلمة: ${received} وحدة
+                النقص: ${diff} وحدة
+                النسبة: ${((diff / sent) * 100).toFixed(2)}%
+                التاريخ: ${new Date().toLocaleString()}
+            `;
+            
+            const whatsappMessage = `تحذير: تم اكتشاف نقص في طلبية فرع ${branch}\nالكمية المرسلة: ${sent}\nالكمية المستلمة: ${received}\nالنقص: ${diff}\nالنسبة: ${((diff / sent) * 100).toFixed(2)}%`;
+            
+            // محاكاة إرسال البريد الإلكتروني
+            console.log('إرسال بريد إلكتروني إلى: manager@example.com');
+            console.log('الموضوع:', subject);
+            console.log('المحتوى:', emailBody);
+            
+            // محاكاة إرسال رسالة واتساب
+            console.log('إرسال رسالة واتساب إلى: +966500000000');
+            console.log('المحتوى:', whatsappMessage);
+            
+            alert('تم إرسال إشعارات النقص إلى المدير المسؤول عبر البريد الإلكتروني والواتساب');
+        }
+    </script>
+</body>
+</html>
